@@ -22,7 +22,9 @@ grep -qxF "$(cat ~/.ssh/id_ed25519.pub)" ~/.ssh/authorized_keys 2>/dev/null || c
 chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
 pgrep -x sshd >/dev/null || /usr/sbin/sshd -p 2222 -h ~/sshd/host_key \
     -o PidFile=/tmp/sshd.pid \
-    -o StreamLocalBindUnlink=yes
+    -o StreamLocalBindUnlink=yes \
+    -o AllowStreamLocalForwarding=yes \
+    -o UsePAM=no
 
 # %%
 %%writefile /home/jovyan/.ssh/config
