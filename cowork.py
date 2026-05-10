@@ -15,16 +15,14 @@
 
 # %%
 %%sh
-mkdir -p ~/.ssh ~/sshd
-chmod 700 ~/.ssh
+mkdir -p ~/sshd
 test -f ~/sshd/host_key || ssh-keygen -t ed25519 -N '' -f ~/sshd/host_key -q
 test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 -q
 grep -qxF "$(cat ~/.ssh/id_ed25519.pub)" ~/.ssh/authorized_keys 2>/dev/null || cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
 /usr/sbin/sshd -p 2222 -h ~/sshd/host_key \
     -o PidFile=/tmp/sshd.pid \
-    -o StreamLocalBindUnlink=yes \
-    -o UsePAM=no
+    -o StreamLocalBindUnlink=yes
 
 # %%
 %%writefile -a /home/jovyan/.ssh/config
