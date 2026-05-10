@@ -46,6 +46,7 @@ local
 # %%
 %%writefile worker.py
 import os
+import time
 import cloudpickle
 from multiprocessing.managers import BaseManager
 
@@ -53,7 +54,12 @@ BaseManager.register('tasks')
 BaseManager.register('results')
 
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
-m.connect()
+for _ in range(50):
+    try:
+        m.connect()
+        break
+    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError, EOFError, BrokenPipeError):
+        time.sleep(0.1)
 tasks, results = m.tasks(), m.results()
 
 try:
