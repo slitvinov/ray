@@ -52,7 +52,7 @@ from multiprocessing.managers import BaseManager
 BaseManager.register('tasks')
 BaseManager.register('results')
 
-m = BaseManager(address=os.environ.get('MANAGER_SOCK', '/tmp/m.sock'), authkey=b'')
+m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
 m.connect()
 tasks, results = m.tasks(), m.results()
 
