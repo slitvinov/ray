@@ -46,7 +46,6 @@ local
 # %%
 %%writefile worker.py
 import os
-import time
 import cloudpickle
 from multiprocessing.managers import BaseManager
 
@@ -54,12 +53,7 @@ BaseManager.register('tasks')
 BaseManager.register('results')
 
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
-for _ in range(50):
-    try:
-        m.connect()
-        break
-    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError, EOFError, BrokenPipeError):
-        time.sleep(0.1)
+m.connect()
 tasks, results = m.tasks(), m.results()
 
 try:
@@ -103,7 +97,7 @@ for _ in range(20):
 # %%
 %%sh
 (
-    while [ ! -S /tmp/m.sock ]; do sleep 0.05; done
+    while ! python3 -c "import socket;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/m.sock');s.close()" 2>/dev/null; do sleep 0.05; done
     i=0
     while IFS= read -r host; do
         sock=/tmp/m-$i.sock

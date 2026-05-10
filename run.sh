@@ -2,7 +2,7 @@
 set -e
 
 (
-    while [ ! -S /tmp/m.sock ]; do sleep 0.05; done
+    while ! python3 -c "import socket;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/m.sock');s.close()" 2>/dev/null; do sleep 0.05; done
     i=0
     while IFS= read -r host; do
         sock=/tmp/m-$i.sock
