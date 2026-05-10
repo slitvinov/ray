@@ -23,10 +23,7 @@ cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
 /usr/sbin/sshd -p 2222 -h ~/sshd/host_key \
     -o PidFile=/tmp/sshd.pid \
-    -o AllowStreamLocalForwarding=yes \
     -o StreamLocalBindUnlink=yes \
-    -o PubkeyAuthentication=yes \
-    -o PasswordAuthentication=no \
     -o UsePAM=no
 
 # %%
