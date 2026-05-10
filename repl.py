@@ -18,15 +18,9 @@ def submit(fn, *args):
     tasks.put(cloudpickle.dumps((fn, args)))
     return results.get()
 
-def bcast(fn, n, *args):
-    blob = cloudpickle.dumps((fn, args))
-    for _ in range(n):
-        tasks.put(blob)
-    return [results.get() for _ in range(n)]
-
 def pmap(fn, xs):
     for x in xs:
         tasks.put(cloudpickle.dumps((fn, (x,))))
     return [results.get() for _ in xs]
 
-code.interact(local={'submit': submit, 'bcast': bcast, 'pmap': pmap})
+code.interact(local={'submit': submit, 'pmap': pmap})

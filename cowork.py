@@ -38,7 +38,7 @@ Host local
     LogLevel ERROR
 
 # %%
-%%writefile hosts.txt
+%%writefile hosts
 local
 local
 
@@ -106,7 +106,7 @@ for _ in range(20):
             -o LogLevel=QUIET \
             "$host" "PATH=/srv/conda/envs/notebook/bin:\$PATH MANAGER_SOCK=$sock python3 -" < worker.py &
         i=$((i + 1))
-    done < hosts.txt
+    done < hosts
     wait
 ) &
 
