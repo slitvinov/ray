@@ -18,7 +18,7 @@
 # mkdir -p ~/sshd
 # test -f ~/sshd/host_key || ssh-keygen -t ed25519 -N '' -f ~/sshd/host_key -q
 # test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 -q
-# grep -qxF "$(cat ~/.ssh/id_ed25519.pub)" ~/.ssh/authorized_keys 2>/dev/null || cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+# cp ~/.ssh/id_ed25519.pub ~/.ssh/authorized_keys
 # chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
 # pkill -x sshd 2>/dev/null
 # sleep 0.2
