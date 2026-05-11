@@ -14,8 +14,6 @@ set -e
         ssh -R "$sock:/tmp/m.sock" \
             -o StreamLocalBindUnlink=yes \
             -o ExitOnForwardFailure=yes \
-            -o ControlMaster=no \
-            -o ControlPath=none \
             -o LogLevel=QUIET \
             "$host" "PATH=\$HOME/miniforge3/bin:\$PATH MANAGER_SOCK=$sock python3 -" < worker.py &
         i=$((i + 1))

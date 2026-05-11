@@ -26,11 +26,17 @@ def pmap(fn, xs, timeout=None):
     return gather(ids, blobs, timeout)
 
 def cpu_info(_=None):
+    import ctypes, ctypes.util
     time.sleep(1)
-    host = socket.gethostname()
-    host = re.sub("[.].*", "", host)    
+    host = re.sub("[.].*", "", socket.gethostname())
     aff = sorted(os.sched_getaffinity(0))
-    return host, os.getpid(), tuple(aff)
+    if hasattr(os, 'sched_getcpu'):
+        cpu = os.sched_getcpu()
+    else:
+        libc = ctypes.CDLL(ctypes.util.find_library('c') or 'libc.so.6')
+        libc.sched_getcpu.restype = ctypes.c_int
+        cpu = libc.sched_getcpu()
+    return host, os.getpid(), cpu, tuple(aff)
 
 SOCK = '/tmp/m.sock'
 pathlib.Path(SOCK).unlink(missing_ok=True)
