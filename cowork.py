@@ -1,32 +1,30 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
 #     comment_magics: false
+#     formats: ipynb,py:percent
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
+#       jupytext_version: 1.19.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
-# %%
-%%sh
-mkdir -p ~/sshd
-test -f ~/sshd/host_key || ssh-keygen -t ed25519 -N '' -f ~/sshd/host_key -q
-test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 -q
-grep -qxF "$(cat ~/.ssh/id_ed25519.pub)" ~/.ssh/authorized_keys 2>/dev/null || cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
-pkill -x sshd 2>/dev/null
-sleep 0.2
-/usr/sbin/sshd -p 2222 -h ~/sshd/host_key \
-    -o PidFile=/tmp/sshd.pid \
-    -o StreamLocalBindUnlink=yes \
-    -o AllowStreamLocalForwarding=yes \
-    -o UsePAM=no
+# %% language="sh"
+# mkdir -p ~/sshd
+# test -f ~/sshd/host_key || ssh-keygen -t ed25519 -N '' -f ~/sshd/host_key -q
+# test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 -q
+# grep -qxF "$(cat ~/.ssh/id_ed25519.pub)" ~/.ssh/authorized_keys 2>/dev/null || cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+# chmod 600 ~/.ssh/id_ed25519 ~/.ssh/authorized_keys
+# pkill -x sshd 2>/dev/null
+# sleep 0.2
+# /usr/sbin/sshd -p 2222 -h ~/sshd/host_key \
+#     -o PidFile=/tmp/sshd.pid \
+#     -o UsePAM=no
 
 # %%
 %%writefile /home/jovyan/.ssh/config
@@ -93,21 +91,20 @@ for x in range(20):
 for _ in range(20):
     print(results.get())
 
-# %%
-%%sh
-(
-    while ! python3 -c "import socket;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/m.sock');s.close()" 2>/dev/null; do sleep 0.05; done
-    i=0
-    while IFS= read -r host; do
-        sock=/tmp/m-$i.sock
-        ssh -R "$sock:/tmp/m.sock" \
-            -o StreamLocalBindUnlink=yes \
-            -o ExitOnForwardFailure=yes \
-            -o LogLevel=QUIET \
-            "$host" "PATH=/srv/conda/envs/notebook/bin:\$PATH MANAGER_SOCK=$sock python3 -" < worker.py &
-        i=$((i + 1))
-    done < hosts
-    wait
-) &
-
-python3 batch.py
+# %% language="sh"
+# (
+#     while ! python3 -c "import socket;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/m.sock');s.close()" 2>/dev/null; do sleep 0.05; done
+#     i=0
+#     while IFS= read -r host; do
+#         sock=/tmp/m-$i.sock
+#         ssh -R "$sock:/tmp/m.sock" \
+#             -o StreamLocalBindUnlink=yes \
+#             -o ExitOnForwardFailure=yes \
+#             -o LogLevel=QUIET \
+#             "$host" "PATH=/srv/conda/envs/notebook/bin:\$PATH MANAGER_SOCK=$sock python3 -" < worker.py &
+#         i=$((i + 1))
+#     done < hosts
+#     wait
+# ) &
+#
+# python3 batch.py
