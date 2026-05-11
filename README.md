@@ -1,12 +1,17 @@
 # cowork
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/slitvinov/ray/HEAD?labpath=cowork.ipynb)
+
 Distributed Python over plain SSH using `cloudpickle`.
 
 - `worker.py` — connects to manager via Unix socket, runs `(fn, args)` tasks.
 - `batch.py` — driver that submits 20 squaring tasks and prints results.
-- `repl.py` — interactive REPL exposing `submit`, `pmap`.
+- `repl.py` — REPL exposing `submit`, `pmap`.
 - `run.sh` — spawns SSH workers (one per line of `hosts`) then runs the script.
 - `hosts` — one host per line.
+- `apt.txt`, `requirements.txt` — Binder env: `openssh-server` + `cloudpickle`, `jupytext`.
+
+Binder rebuilds on first launch after each push to `HEAD`. Replace `HEAD` in the badge URL to pin a tag/branch/commit.
 
 ```
 $ sh run.sh batch.py
