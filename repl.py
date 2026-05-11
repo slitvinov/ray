@@ -15,9 +15,9 @@ BaseManager.register('results', callable=lambda: results)
 server = BaseManager(address=SOCK, authkey=b'').get_server()
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
-_next_id = itertools.count()
+counter = itertools.count()
 
-def _gather(ids, blobs):
+def gather(ids, blobs):
     pending = dict(zip(ids, blobs))
     for i, blob in pending.items():
         tasks.put((i, blob))
@@ -35,13 +35,13 @@ def _gather(ids, blobs):
     return [out[i] for i in ids]
 
 def submit(fn, *args):
-    i = next(_next_id)
-    return _gather([i], [cloudpickle.dumps((fn, args))])[0]
+    i = next(counter)
+    return gather([i], [cloudpickle.dumps((fn, args))])[0]
 
 def pmap(fn, xs):
     xs = list(xs)
-    ids = [next(_next_id) for _ in xs]
+    ids = [next(counter) for _ in xs]
     blobs = [cloudpickle.dumps((fn, (x,))) for x in xs]
-    return _gather(ids, blobs)
+    return gather(ids, blobs)
 
 code.interact(local={'submit': submit, 'pmap': pmap})

@@ -32,17 +32,18 @@ $ sh run.sh repl.py
 Python 3.14.4 (main, ...) [...]
 Type "help", "copyright", "credits" or "license" for more information.
 (InteractiveConsole)
->>> def f(x): import socket; return f"{socket.gethostname().split('.')[0]} got {x}"
+>>> import socket, statistics, time
+>>> def f(x): return f"{socket.gethostname().split('.')[0]} got {x}"
 >>> submit(f, 42)
 'hal got 42'
 >>> pmap(f, range(4))
 ['hal got 0', 'glados got 1', 'hal got 2', 'glados got 3']
->>> pmap(lambda x: x*x, range(10))
-[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
->>> def slow(x): import time; time.sleep(2); return x
->>> import time; t=time.time(); pmap(slow, range(4)); print(f"{time.time()-t:.2f}s")
+>>> pmap(lambda x: statistics.mean(x), [[1, 3], [10, 30]])
+[2, 20]
+>>> def slow(x): time.sleep(5); return x
+>>> t=time.time(); pmap(slow, range(4)); print(f"{time.time()-t:.2f}s")
 [0, 1, 2, 3]
-4.04s
+10.37s
 >>> ^D
-$
+now exiting InteractiveConsole...
 ```
