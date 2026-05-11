@@ -52,17 +52,15 @@ BaseManager.register('results')
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
 m.connect()
 tasks, results = m.tasks(), m.results()
-
-try:
-    while True:
-        blob = tasks.get()
-        fn, args = cloudpickle.loads(blob)
-        try:
-            results.put(fn(*args))
-        except Exception as e:
-            results.put(e)
-except (EOFError, ConnectionResetError, BrokenPipeError):
-    pass
+while True:
+    blob = tasks.get()
+    if blob is None:
+        break
+    fn, args = cloudpickle.loads(blob)
+    try:
+        results.put(fn(*args))
+    except Exception as e:
+        results.put(e)
 
 # %%
 %%writefile batch.py
@@ -86,8 +84,11 @@ BaseManager.register('results', callable=lambda: results)
 server = BaseManager(address=SOCK, authkey=b'').get_server()
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
+N = len(open('hosts').read().split())
 for x in range(20):
     tasks.put(cloudpickle.dumps((work, (x,))))
+for _ in range(N):
+    tasks.put(None)
 for _ in range(20):
     print(results.get())
 
