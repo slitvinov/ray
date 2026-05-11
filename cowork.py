@@ -50,17 +50,22 @@ BaseManager.register('tasks')
 BaseManager.register('results')
 
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
-m.connect()
-tasks, results = m.tasks(), m.results()
-while True:
-    blob = tasks.get()
-    if blob is None:
-        break
-    fn, args = cloudpickle.loads(blob)
-    try:
-        results.put(fn(*args))
-    except Exception as e:
-        results.put(e)
+
+try:
+    m.connect()
+    tasks, results = m.tasks(), m.results()
+    while True:
+        item = tasks.get()
+        if item is None:
+            break
+        i, blob = item
+        fn, args = cloudpickle.loads(blob)
+        try:
+            results.put((i, fn(*args)))
+        except Exception as e:
+            results.put((i, e))
+except (EOFError, ConnectionResetError, BrokenPipeError):
+    pass
 
 # %%
 %%writefile batch.py
@@ -68,7 +73,7 @@ import threading
 import cloudpickle
 from pathlib import Path
 from multiprocessing.managers import BaseManager
-from queue import Queue
+from queue import Queue, Empty
 
 SOCK = '/tmp/m.sock'
 Path(SOCK).unlink(missing_ok=True)
@@ -85,12 +90,30 @@ server = BaseManager(address=SOCK, authkey=b'').get_server()
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
 N = len(open('hosts').read().split())
-for x in range(20):
-    tasks.put(cloudpickle.dumps((work, (x,))))
+args = list(range(20))
+pending = set(range(len(args)))
+out = {}
+
+def submit(ids):
+    for i in ids:
+        tasks.put((i, cloudpickle.dumps((work, (args[i],)))))
+
+submit(pending)
+while pending:
+    try:
+        i, r = results.get(timeout=5)
+    except Empty:
+        submit(list(pending))
+        continue
+    if i in pending:
+        pending.remove(i)
+        out[i] = r
+
 for _ in range(N):
     tasks.put(None)
-for _ in range(20):
-    print(results.get())
+
+for i in range(len(args)):
+    print(out[i])
 
 # %% language="sh"
 # (
