@@ -93,6 +93,7 @@ for _ in range(20):
 
 # %% language="sh"
 # (
+#     rm -f /tmp/m-*.sock
 #     while ! test -S /tmp/m.sock; do sleep 0.05; done
 #     i=0
 #     while IFS= read -r host; do
