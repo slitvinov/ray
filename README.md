@@ -64,3 +64,56 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> ^D
 now exiting InteractiveConsole...
 ```
+
+Slurm (FAS RC, driven from a laptop)
+
+Add a `Host holy*` block to `~/.ssh/config` so compute nodes are reachable through the login alias `rc`:
+
+```
+Host holy*
+    User <user>
+    ProxyJump rc
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    LogLevel ERROR
+```
+
+Submit a holding job (4 nodes × 4 workers each = 16):
+
+```
+JOB=$(ssh rc 'sbatch --parsable -J cowork -N 4 -c 4 -t 10:00 -p shared --mem=4G --wrap="sleep infinity"')
+```
+
+Once `squeue -j $JOB` shows the state as `R`, expand the node list 4× into `hosts`:
+
+```
+ssh rc "scontrol show hostnames \$(squeue -j $JOB -h -o %N) | awk '{for(i=0;i<4;i++) print}'" > hosts
+```
+
+Run:
+
+```
+sh run.sh repl.py
+```
+
+```
+>>> import time
+>>> def slow(x): time.sleep(10); return x
+>>> t=time.time(); pmap(slow, range(160)); print(f"{time.time()-t:.2f}s")
+[0, 1, ..., 159]
+103.82s
+```
+
+160 × 10 s = 1600 s sequential; ~100 s ideal on 16 workers — near-perfect scaling.
+
+Check that workers actually land on distinct cores:
+
+```
+>>> pmap(cpu_info, range(16))
+```
+
+Release the allocation when done:
+
+```
+ssh rc scancel $JOB
+```

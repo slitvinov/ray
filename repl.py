@@ -1,13 +1,10 @@
-import code
-import itertools
-import threading
-import cloudpickle
-from pathlib import Path
 from multiprocessing.managers import BaseManager
 from queue import Queue, Empty
+import code, os, socket, itertools, threading, cloudpickle, pathlib
+
 
 SOCK = '/tmp/m.sock'
-Path(SOCK).unlink(missing_ok=True)
+pathlib.Path(SOCK).unlink(missing_ok=True)
 
 tasks, results = Queue(), Queue()
 BaseManager.register('tasks',   callable=lambda: tasks)
@@ -40,4 +37,8 @@ def pmap(fn, xs, timeout=None):
     blobs = [cloudpickle.dumps((fn, (x,))) for x in xs]
     return gather(ids, blobs, timeout)
 
-code.interact(local={'pmap': pmap})
+def cpu_info(_=None):
+    aff = sorted(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else None
+    return socket.gethostname(), os.getpid(), aff
+
+code.interact(local={'pmap': pmap, 'cpu_info': cpu_info})
