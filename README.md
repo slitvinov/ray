@@ -84,7 +84,7 @@ Submit a holding job (4 nodes × 4 workers each = 16):
 JOB=$(ssh rc 'sbatch --parsable -J cowork -N 4 -c 4 -t 10:00 -p shared --mem=4G --wrap="sleep infinity"')
 ```
 
-Once `squeue -j $JOB` shows the state as `R`, expand the node list 4× into `hosts`:
+Expand the node list into `hosts`:
 
 ```
 ssh rc "scontrol show hostnames \$(squeue -j $JOB -h -o %N) | awk '{for(i=0;i<4;i++) print}'" > hosts
@@ -106,10 +106,26 @@ sh run.sh repl.py
 
 160 × 10 s = 1600 s sequential; ~100 s ideal on 16 workers — near-perfect scaling.
 
-Check that workers actually land on distinct cores:
+Check that workers land on distinct cores:
 
 ```
->>> pmap(cpu_info, range(16))
+>>> import pprint; pprint.pprint(set(pmap(cpu_info, range(32))))
+{('holy7c06107', 3555778, (0, 1, 2, 3)),
+ ('holy7c06107', 3555779, (0, 1, 2, 3)),
+ ('holy7c06107', 3555793, (0, 1, 2, 3)),
+ ('holy7c06107', 3555815, (0, 1, 2, 3)),
+ ('holy7c06109', 4069370, (20, 21, 22, 23)),
+ ('holy7c06109', 4069371, (20, 21, 22, 23)),
+ ('holy7c06109', 4069431, (20, 21, 22, 23)),
+ ('holy7c06109', 4069432, (20, 21, 22, 23)),
+ ('holy7c06204', 39241, (41, 42, 43, 44)),
+ ('holy7c06204', 39285, (41, 42, 43, 44)),
+ ('holy7c06204', 39313, (41, 42, 43, 44)),
+ ('holy7c06204', 39384, (41, 42, 43, 44)),
+ ('holy7c08102', 4096915, (2, 3, 8, 9)),
+ ('holy7c08102', 4096943, (2, 3, 8, 9)),
+ ('holy7c08102', 4096967, (2, 3, 8, 9)),
+ ('holy7c08102', 4096981, (2, 3, 8, 9))}
 ```
 
 Release the allocation when done:

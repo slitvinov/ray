@@ -1,18 +1,6 @@
 from multiprocessing.managers import BaseManager
 from queue import Queue, Empty
-import code, os, socket, itertools, threading, cloudpickle, pathlib
-
-
-SOCK = '/tmp/m.sock'
-pathlib.Path(SOCK).unlink(missing_ok=True)
-
-tasks, results = Queue(), Queue()
-BaseManager.register('tasks',   callable=lambda: tasks)
-BaseManager.register('results', callable=lambda: results)
-server = BaseManager(address=SOCK, authkey=b'').get_server()
-threading.Thread(target=server.serve_forever, daemon=True).start()
-
-counter = itertools.count()
+import code, os, socket, itertools, threading, cloudpickle, pathlib, time, re
 
 def gather(ids, blobs, timeout):
     pending = dict(zip(ids, blobs))
@@ -38,7 +26,18 @@ def pmap(fn, xs, timeout=None):
     return gather(ids, blobs, timeout)
 
 def cpu_info(_=None):
-    aff = sorted(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else None
-    return socket.gethostname(), os.getpid(), aff
+    time.sleep(1)
+    host = socket.gethostname()
+    host = re.sub("[.].*", "", host)    
+    aff = sorted(os.sched_getaffinity(0))
+    return host, os.getpid(), tuple(aff)
 
+SOCK = '/tmp/m.sock'
+pathlib.Path(SOCK).unlink(missing_ok=True)
+tasks, results = Queue(), Queue()
+BaseManager.register('tasks',   callable=lambda: tasks)
+BaseManager.register('results', callable=lambda: results)
+server = BaseManager(address=SOCK, authkey=b'').get_server()
+threading.Thread(target=server.serve_forever, daemon=True).start()
+counter = itertools.count()
 code.interact(local={'pmap': pmap, 'cpu_info': cpu_info})

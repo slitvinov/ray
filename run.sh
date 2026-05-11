@@ -2,7 +2,12 @@
 set -e
 
 (
-    while ! python3 -c "import socket;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/m.sock');s.close()" 2>/dev/null; do sleep 0.05; done
+    rm -f /tmp/m-*.sock
+    while ! test -S /tmp/m.sock; do sleep 0.05; done
+    while IFS= read -r host; do
+        ssh -o ControlMaster=no -o ControlPath=none -o LogLevel=QUIET "$host" 'rm -f /tmp/m-*.sock' &
+    done < hosts
+    wait
     i=0
     while IFS= read -r host; do
         sock=/tmp/m-$i.sock
