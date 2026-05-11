@@ -1,6 +1,6 @@
 import os
 import cloudpickle
-import socket, statistics, timedfpmap(f, range(4))from multiprocessing.managers import BaseManager
+from multiprocessing.managers import BaseManager
 BaseManager.register('tasks')
 BaseManager.register('results')
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
