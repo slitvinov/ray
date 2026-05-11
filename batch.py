@@ -2,7 +2,7 @@ import threading
 import cloudpickle
 from pathlib import Path
 from multiprocessing.managers import BaseManager
-from queue import Queue
+from queue import Queue, Empty
 
 SOCK = '/tmp/m.sock'
 Path(SOCK).unlink(missing_ok=True)
@@ -18,7 +18,28 @@ BaseManager.register('results', callable=lambda: results)
 server = BaseManager(address=SOCK, authkey=b'').get_server()
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
-for x in range(20):
-    tasks.put(cloudpickle.dumps((work, (x,))))
-for _ in range(20):
-    print(results.get())
+N = len(open('hosts').read().split())
+args = list(range(20))
+pending = set(range(len(args)))
+out = {}
+
+def submit(ids):
+    for i in ids:
+        tasks.put((i, cloudpickle.dumps((work, (args[i],)))))
+
+submit(pending)
+while pending:
+    try:
+        i, r = results.get(timeout=5)
+    except Empty:
+        submit(list(pending))
+        continue
+    if i in pending:
+        pending.remove(i)
+        out[i] = r
+
+for _ in range(N):
+    tasks.put(None)
+
+for i in range(len(args)):
+    print(out[i])

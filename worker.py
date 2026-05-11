@@ -6,16 +6,19 @@ BaseManager.register('tasks')
 BaseManager.register('results')
 
 m = BaseManager(address=os.environ['MANAGER_SOCK'], authkey=b'')
-m.connect()
-tasks, results = m.tasks(), m.results()
 
 try:
+    m.connect()
+    tasks, results = m.tasks(), m.results()
     while True:
-        blob = tasks.get()
+        item = tasks.get()
+        if item is None:
+            break
+        i, blob = item
         fn, args = cloudpickle.loads(blob)
         try:
-            results.put(fn(*args))
+            results.put((i, fn(*args)))
         except Exception as e:
-            results.put(e)
+            results.put((i, e))
 except (EOFError, ConnectionResetError, BrokenPipeError):
     pass

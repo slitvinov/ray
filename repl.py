@@ -1,9 +1,10 @@
 import code
+import itertools
 import threading
 import cloudpickle
 from pathlib import Path
 from multiprocessing.managers import BaseManager
-from queue import Queue
+from queue import Queue, Empty
 
 SOCK = '/tmp/m.sock'
 Path(SOCK).unlink(missing_ok=True)
@@ -14,13 +15,33 @@ BaseManager.register('results', callable=lambda: results)
 server = BaseManager(address=SOCK, authkey=b'').get_server()
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
+_next_id = itertools.count()
+
+def _gather(ids, blobs):
+    pending = dict(zip(ids, blobs))
+    for i, blob in pending.items():
+        tasks.put((i, blob))
+    out = {}
+    while pending:
+        try:
+            i, r = results.get(timeout=5)
+        except Empty:
+            for i, blob in pending.items():
+                tasks.put((i, blob))
+            continue
+        if i in pending:
+            del pending[i]
+            out[i] = r
+    return [out[i] for i in ids]
+
 def submit(fn, *args):
-    tasks.put(cloudpickle.dumps((fn, args)))
-    return results.get()
+    i = next(_next_id)
+    return _gather([i], [cloudpickle.dumps((fn, args))])[0]
 
 def pmap(fn, xs):
-    for x in xs:
-        tasks.put(cloudpickle.dumps((fn, (x,))))
-    return [results.get() for _ in xs]
+    xs = list(xs)
+    ids = [next(_next_id) for _ in xs]
+    blobs = [cloudpickle.dumps((fn, (x,))) for x in xs]
+    return _gather(ids, blobs)
 
 code.interact(local={'submit': submit, 'pmap': pmap})
