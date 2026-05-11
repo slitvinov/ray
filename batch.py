@@ -1,20 +1,17 @@
-import threading
-import cloudpickle
-from pathlib import Path
 from multiprocessing.managers import BaseManager
 from queue import Queue, Empty
+import socket, re, time, threading, cloudpickle, pathlib
 
 def work(x):
-    import socket
-    host = socket.gethostname().split('.')[0]
-    return f"{host:>10s} {x * x:>10d}"
+    time.sleep(2)
+    return socket.gethostname(), x * x
 
 def submit(ids):
     for i in ids:
         tasks.put((i, cloudpickle.dumps((work, (args[i],)))))
 
 SOCK = '/tmp/m.sock'
-Path(SOCK).unlink(missing_ok=True)
+pathlib.Path(SOCK).unlink(missing_ok=True)
 tasks, results = Queue(), Queue()
 BaseManager.register('tasks',   callable=lambda: tasks)
 BaseManager.register('results', callable=lambda: results)
@@ -26,12 +23,13 @@ pending = set(range(len(args)))
 submit(pending)
 while pending:
     try:
-        i, r = results.get(timeout=60)
+        i, (host, ans) = results.get(timeout=60)
     except Empty:
         submit(list(pending))
         continue
     if i in pending:
         pending.remove(i)
-        print(r)
+        host = re.sub("[.].*", "", host)
+        print(f"{host:>20s} {ans:>10d}")
 for _ in range(N):
     tasks.put(None)

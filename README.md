@@ -11,20 +11,33 @@ Distributed Python over plain SSH using `cloudpickle`.
 - `hosts` — one host per line.
 - `apt.txt`, `requirements.txt` — Binder env: `openssh-server` + `cloudpickle`, `jupytext`.
 
-Binder rebuilds on first launch after each push to `HEAD`. Replace `HEAD` in the badge URL to pin a tag/branch/commit.
+Bootstrap each host in `hosts` with matching Python + `cloudpickle` in `~/miniforge3`:
 
 ```
+ssh <host> bash <<'!'
+OS=$(uname -s); [ "$OS" = Darwin ] && OS=MacOSX
+ARCH=$(uname -m)
+curl -fsSL "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$OS-$ARCH.sh" -o /tmp/mf.sh
+bash /tmp/mf.sh -b
+rm /tmp/mf.sh
+~/miniforge3/bin/conda install -y python=3.14
+~/miniforge3/bin/pip install cloudpickle
+!
+```
+
+```
+$ echo 'rc\nhal\nglados\nrc\nlocalhost' > hosts
 $ sh run.sh batch.py
-       hal          0
-    glados          1
-       hal          4
-       hal         16
-    glados          9
-       hal         36
-    glados         25
-       hal         49
-    glados         64
-       hal         81
+		 mac          0
+		 mac          1
+		 mac          4
+	      glados          9
+		 hal         16
+	 holylogin07         25
+	 holylogin07         36
+		 mac         49
+	      glados         64
+		 hal         81
 ```
 
 Results print as they arrive, so order depends on which worker finishes first — not input order.
