@@ -17,14 +17,14 @@ threading.Thread(target=server.serve_forever, daemon=True).start()
 
 counter = itertools.count()
 
-def gather(ids, blobs):
+def gather(ids, blobs, timeout):
     pending = dict(zip(ids, blobs))
     for i, blob in pending.items():
         tasks.put((i, blob))
     out = {}
     while pending:
         try:
-            i, r = results.get(timeout=5)
+            i, r = results.get(timeout=timeout)
         except Empty:
             for i, blob in pending.items():
                 tasks.put((i, blob))
@@ -34,10 +34,10 @@ def gather(ids, blobs):
             out[i] = r
     return [out[i] for i in ids]
 
-def pmap(fn, xs):
+def pmap(fn, xs, timeout=None):
     xs = list(xs)
     ids = [next(counter) for _ in xs]
     blobs = [cloudpickle.dumps((fn, (x,))) for x in xs]
-    return gather(ids, blobs)
+    return gather(ids, blobs, timeout)
 
 code.interact(local={'pmap': pmap})
