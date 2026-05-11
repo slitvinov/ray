@@ -38,7 +38,7 @@ def cpu_info(_=None):
         cpu = libc.sched_getcpu()
     return host, os.getpid(), cpu, tuple(aff)
 
-SOCK = '/tmp/m.sock'
+SOCK = os.environ['MANAGER_SOCK_DRIVER']
 pathlib.Path(SOCK).unlink(missing_ok=True)
 tasks, results = Queue(), Queue()
 BaseManager.register('tasks',   callable=lambda: tasks)

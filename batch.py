@@ -1,6 +1,6 @@
 from multiprocessing.managers import BaseManager
 from queue import Queue, Empty
-import socket, re, time, threading, cloudpickle, pathlib
+import os, socket, re, time, threading, cloudpickle, pathlib
 
 def work(x):
     time.sleep(2)
@@ -10,7 +10,7 @@ def submit(ids):
     for i in ids:
         tasks.put((i, cloudpickle.dumps((work, (args[i],)))))
 
-SOCK = '/tmp/m.sock'
+SOCK = os.environ['MANAGER_SOCK_DRIVER']
 pathlib.Path(SOCK).unlink(missing_ok=True)
 tasks, results = Queue(), Queue()
 BaseManager.register('tasks',   callable=lambda: tasks)
@@ -23,7 +23,7 @@ pending = set(range(len(args)))
 submit(pending)
 while pending:
     try:
-        i, (host, ans) = results.get(timeout=60)
+        i, (host, ans) = results.get(timeout=5)
     except Empty:
         submit(list(pending))
         continue
