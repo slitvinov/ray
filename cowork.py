@@ -102,7 +102,7 @@ for _ in range(20):
 #             -o StreamLocalBindUnlink=yes \
 #             -o ExitOnForwardFailure=yes \
 #             -o LogLevel=QUIET \
-#             "$host" "PATH=/srv/conda/envs/notebook/bin:\$PATH MANAGER_SOCK=$sock python3 -" < worker.py &
+#             "$host" 'MANAGER_SOCK=$sock /srv/conda/envs/notebook/bin/python3 -' < worker.py &
 #         i=$((i + 1))
 #     done < hosts
 #     wait
