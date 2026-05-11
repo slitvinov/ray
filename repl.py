@@ -34,14 +34,10 @@ def gather(ids, blobs):
             out[i] = r
     return [out[i] for i in ids]
 
-def submit(fn, *args):
-    i = next(counter)
-    return gather([i], [cloudpickle.dumps((fn, args))])[0]
-
 def pmap(fn, xs):
     xs = list(xs)
     ids = [next(counter) for _ in xs]
     blobs = [cloudpickle.dumps((fn, (x,))) for x in xs]
     return gather(ids, blobs)
 
-code.interact(local={'submit': submit, 'pmap': pmap})
+code.interact(local={'pmap': pmap})
